@@ -7,7 +7,6 @@ using RailWorkshop.Db;
 using RailWorkshop.Db.Data;
 using RailWorkshop.Services.Contracts;
 using Serilog;
-using Microsoft.Extensions.Configuration;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 

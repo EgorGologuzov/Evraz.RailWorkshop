@@ -1,9 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using RailWorkshop.API.Dto;
 using RailWorkshop.Db.Utils;
 using RailWorkshop.Services.Contracts;
-using RailWorkshop.Services.Entity;
 
 namespace RailWorkshop.API.Controllers
 {

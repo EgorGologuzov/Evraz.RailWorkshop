@@ -1,6 +1,4 @@
-﻿using RailWorkshop.Services.Entity;
-
-namespace RailWorkshop.Services.Contracts
+﻿namespace RailWorkshop.Services.Contracts
 {
     public interface IRepository<T>
     {
