@@ -11,9 +11,13 @@ namespace RailWorkshop.Services.Entity
         public string Name { get; set; }
 
         [Required]
+        public int ProfileId { get; set; }
+
         public RailProfile Profile { get; set; }
 
         [Required]
+        public int SteelId { get; set; }
+
         public SteelGrade Steel { get; set; }
 
         [Column(TypeName = "jsonb")]

@@ -1,6 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Text.Json;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RailWorkshop.API.Dto;
+using RailWorkshop.API.Utils;
 using RailWorkshop.Db.Utils;
 using RailWorkshop.Services.Contracts;
 using RailWorkshop.Services.Entity;
@@ -9,44 +12,25 @@ namespace RailWorkshop.API.Controllers
 {
     [Route("api/employee")]
     [ApiController]
-    public class EmployeeController : GeneralController
+    public class EmployeeController : GeneralController<Employee>
     {
         private readonly IEmployeeRepository _repos;
         private readonly ILogger _logger;
-        private readonly IHandbookRepository _handbooks;
+        private readonly IMapper _mapper;
 
         public EmployeeController(
             IEmployeeRepository repos,
-            IHandbookRepository handbooks,
-            ILogger<EmployeeController> logger)
+            ILogger<EmployeeController> logger,
+            IMapper mapper) : base(repos, logger, mapper)
         {
             _repos = repos;
             _logger = logger;
-            _handbooks = handbooks;
-        }
-
-        [Authorize]
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(Guid id)
-        {
-            if (ModelState.IsValid == false)
-            {
-                return BadRequest(ModelState);
-            }
-
-            Employee result = await _repos.GetById(id);
-
-            if (result is null)
-            {
-                return EntityNotFound();
-            }
-
-            return Ok(result);
+            _mapper = mapper;
         }
 
         [Authorize]
         [HttpPut("password")]
-        public async Task<IActionResult> UpdatePassword([FromBody] PasswordUpdateDto data)
+        public async Task<IActionResult> UpdatePassword([FromBody] EmployeePasswordDto data)
         {
             if (ModelState.IsValid == false)
             {
@@ -56,80 +40,104 @@ namespace RailWorkshop.API.Controllers
             try
             {
                 Employee result = await _repos.UpdatePassword(data.EmployeeId, data.OldPassword, data.NewPassword);
+                EmployeeReturnDto dto = _mapper.Map<EmployeeReturnDto>(await _repos.GetById(result.Id));
 
-                return Ok(result);
+                return Ok(dto);
+            }
+            catch (IncorrectLoginOrPasswordException)
+            {
+                return IncorrectLoginOrPassword();
             }
             catch (Microsoft.EntityFrameworkCore.DbUpdateException)
             {
-                _logger.LogError("Failed create Employee creation data", data.ToJson());
+                _logger.LogError("Failed password update {data}", data.ToJson());
                 return InvalidData();
             }
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = ClientRoles.Admin)]
+        [HttpDelete("password")]
+        public async Task<IActionResult> ResetPassword([FromBody] EmployeePasswordDto data)
+        {
+            if (ModelState.IsValid == false)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                Employee result = await _repos.ResetPassword(data.EmployeeId, data.NewPassword);
+                EmployeeReturnDto dto = _mapper.Map<EmployeeReturnDto>(await _repos.GetById(result.Id));
+
+                return Ok(dto);
+            }
+            catch (EntityNotFoundException)
+            {
+                return EntityNotFound();
+            }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+            {
+                _logger.LogError("Failed password reset {data}", data.ToJson());
+                return InvalidData();
+            }
+        }
+
+        [Authorize]
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            IActionResult result = await GetByIdGeneric(id);
+
+            if (result is OkObjectResult r)
+            {
+                var value = (Employee)r.Value;
+                r.Value = Mapper.Map<EmployeeReturnDto>(value);
+            }
+
+            return result;
+        }
+
+        [Authorize(Roles = ClientRoles.Admin)]
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Employee data)
+        public async Task<IActionResult> Create([FromBody] EmployeeCreateDto data)
         {
-            if (ModelState.IsValid == false)
+            IActionResult result = await CreateGeneric(data);
+
+            if (result is OkObjectResult r)
             {
-                return BadRequest(ModelState);
+                var value = (Employee)r.Value;
+                r.Value = await GetReturnDtoByEntityId<EmployeeReturnDto>(value.Id);
             }
 
-            try
-            {
-                Employee result = await _repos.Create(data);
-
-                return Ok(result);
-            }
-            catch (Microsoft.EntityFrameworkCore.DbUpdateException)
-            {
-                _logger.LogError("Failed create Employee creation data {data}", data.ToJson());
-                return InvalidData();
-            }
+            return result;
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = ClientRoles.Admin)]
         [HttpPut]
-        public async Task<IActionResult> Update([FromBody] Employee data)
+        public async Task<IActionResult> Update([FromBody] EmployeeUpdateDto data)
         {
-            if (ModelState.IsValid == false)
+            IActionResult result = await UpdateGeneric(data.Id, data);
+
+            if (result is OkObjectResult r)
             {
-                return BadRequest(ModelState);
+                r.Value = await GetReturnDtoByEntityId<EmployeeReturnDto>(data.Id);
             }
 
-            try
-            {
-                Employee result = await _repos.Update(data);
-
-                return Ok(result);
-            }
-            catch (Microsoft.EntityFrameworkCore.DbUpdateException)
-            {
-                _logger.LogError("Failed update Employee creation data {data}", data.ToJson());
-                return InvalidData();
-            }
+            return result;
         }
 
-        [Authorize(Roles = "Admin")]
-        [HttpDelete]
-        public async Task<IActionResult> Delete([FromBody] Employee data)
+        [Authorize(Roles = ClientRoles.Admin)]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id)
         {
-            if (ModelState.IsValid == false)
+            IActionResult result = await DeleteGeneric(id);
+
+            if (result is OkObjectResult r)
             {
-                return BadRequest(ModelState);
+                r.Value = Mapper.Map<EmployeeReturnDto>(r.Value);
             }
 
-            try
-            {
-                Employee result = await _repos.Delete(data);
-
-                return Ok(result);
-            }
-            catch (Microsoft.EntityFrameworkCore.DbUpdateException)
-            {
-                _logger.LogError("Failed delete Employee creation data {data}", data.ToJson());
-                return InvalidData();
-            }
+            return result;
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using JWT.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -9,12 +8,13 @@ using RailWorkshop.API.Utils;
 using RailWorkshop.Db.Utils;
 using RailWorkshop.Services.Contracts;
 using RailWorkshop.Services.Entity;
+using RailWorkshop.Services.Utils;
 
 namespace RailWorkshop.API.Controllers
 {
     [ApiController]
     [Route("api/auth")]
-    public class AuthenticationController : GeneralController
+    public class AuthenticationController : ControllerBase
     {
         private readonly JWTSettings _options;
         private readonly IEmployeeRepository _employeeRepository;
@@ -33,7 +33,7 @@ namespace RailWorkshop.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            if (login == _options.AdminLogin && password == _options.AdminPassword)
+            if (login == _options.AdminLogin && password.ToSha256Hash() == _options.AdminPassword)
             {
                 List<Claim> claims = new()
                 {
@@ -61,6 +61,7 @@ namespace RailWorkshop.API.Controllers
             }
         }
 
+        [NonAction]
         public string GenerateToken(IList<Claim> claims)
         {
             SymmetricSecurityKey signingKey = new(Encoding.UTF8.GetBytes(_options.SecretKey));

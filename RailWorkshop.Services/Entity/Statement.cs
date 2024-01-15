@@ -18,9 +18,13 @@ namespace RailWorkshop.Services.Entity
         public Dictionary<Guid, decimal> Products { get; set; }
 
         [Required]
+        public Guid ResponsibleId { get; set; }
+
         public Employee Responsible { get; set; }
 
         [Required]
+        public int SegmentId { get; set; }
+
         public WorkshopSegment Segment { get; set; }
     }
 }

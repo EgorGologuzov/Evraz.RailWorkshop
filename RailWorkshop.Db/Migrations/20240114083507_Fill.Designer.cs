@@ -13,7 +13,7 @@ using RailWorkshop.Db;
 namespace RailWorkshop.Db.Migrations
 {
     [DbContext(typeof(PostgresContext))]
-    [Migration("20240109105736_Fill")]
+    [Migration("20240114083507_Fill")]
     partial class Fill
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

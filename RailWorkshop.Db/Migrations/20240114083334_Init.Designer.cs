@@ -13,7 +13,7 @@ using RailWorkshop.Db;
 namespace RailWorkshop.Db.Migrations
 {
     [DbContext(typeof(PostgresContext))]
-    [Migration("20240109105136_Init")]
+    [Migration("20240114083334_Init")]
     partial class Init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

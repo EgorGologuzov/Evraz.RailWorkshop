@@ -7,6 +7,7 @@ using RailWorkshop.Db;
 using RailWorkshop.Db.Data;
 using RailWorkshop.Services.Contracts;
 using Serilog;
+using Microsoft.Extensions.Configuration;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -44,12 +45,17 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddControllers();
 builder.Services.AddScoped<IHandbookRepository, HandbookRepository>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
 // Подключение базы данных
-builder.Services.AddDbContext<PostgresContext>();
+builder.Services.AddDbContext<PostgresContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaulConnection")));
 
 // Установка конфигурации Serilog
 builder.Host.UseSerilog((context, config) => config.ReadFrom.Configuration(context.Configuration));
+
+// Добавление автомапера
+builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddControllersWithViews();
 
 WebApplication app = builder.Build();
 

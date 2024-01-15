@@ -7,9 +7,13 @@ namespace RailWorkshop.Services.Entity
         public int Id { get; set; }
 
         [Required]
+        public Guid ProductId { get; set; }
+
         public Product Product { get; set; }
 
         [Required]
+        public int DefectId { get; set; }
+
         public Defect Defect { get; set; }
 
         public decimal Quantity { get; set; }

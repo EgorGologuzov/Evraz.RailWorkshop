@@ -1,6 +1,8 @@
-﻿using System.Text.Json;
+﻿using System.Data;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RailWorkshop.API.Utils;
 using RailWorkshop.Db.Utils;
 using RailWorkshop.Services.Contracts;
 using RailWorkshop.Services.Entity;
@@ -11,7 +13,7 @@ namespace RailWorkshop.API.Controllers
     [ApiController]
     [Authorize]
     [Route("api/handbooks")]
-    public class HandbookContoller : GeneralController
+    public class HandbookContoller : ControllerBase
     {
         private const string _defectKey = "defect";
         private const string _railprofileKey = "railprofile";
@@ -28,7 +30,6 @@ namespace RailWorkshop.API.Controllers
         }
 
         [HttpGet("{handbook}")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<IHandbookEntity>))]
         public async Task<IActionResult> GetAll(string handbook)
         {
             if (ModelState.IsValid == false)
@@ -39,16 +40,16 @@ namespace RailWorkshop.API.Controllers
             switch (handbook)
             {
                 case _defectKey:
-                    return await TypedGetAll<Defect>();
+                    return await GetAllGeneric<Defect>();
 
                 case _railprofileKey:
-                    return await TypedGetAll<RailProfile>();
+                    return await GetAllGeneric<RailProfile>();
 
                 case _steelgradeKey:
-                    return await TypedGetAll<SteelGrade>();
+                    return await GetAllGeneric<SteelGrade>();
 
                 case _workshopsegmentKey:
-                    return await TypedGetAll<WorkshopSegment>();
+                    return await GetAllGeneric<WorkshopSegment>();
 
                 default:
                     return HandbookNotFound(handbook);
@@ -56,7 +57,6 @@ namespace RailWorkshop.API.Controllers
         }
 
         [HttpGet("{handbook}/{id}")]
-        [ProducesResponseType(200, Type = typeof(IHandbookEntity))]
         public async Task<IActionResult> GetById(string handbook, int id)
         {
             if (ModelState.IsValid == false)
@@ -67,23 +67,23 @@ namespace RailWorkshop.API.Controllers
             switch (handbook)
             {
                 case _defectKey:
-                    return await TypedGetById<Defect>(id);
+                    return await GetByIdGeneric<Defect>(id);
 
                 case _railprofileKey:
-                    return await TypedGetById<RailProfile>(id);
+                    return await GetByIdGeneric<RailProfile>(id);
 
                 case _steelgradeKey:
-                    return await TypedGetById<SteelGrade>(id);
+                    return await GetByIdGeneric<SteelGrade>(id);
 
                 case _workshopsegmentKey:
-                    return await TypedGetById<WorkshopSegment>(id);
+                    return await GetByIdGeneric<WorkshopSegment>(id);
 
                 default:
                     return HandbookNotFound(handbook);
             }
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = ClientRoles.Admin)]
         [HttpPost("{handbook}")]
         public async Task<IActionResult> Create(string handbook, [FromBody] JsonElement data)
         {
@@ -95,23 +95,23 @@ namespace RailWorkshop.API.Controllers
             switch (handbook)
             {
                 case _defectKey:
-                    return await TypedCreate<Defect>(data);
+                    return await CreateGeneric<Defect>(data);
 
                 case _railprofileKey:
-                    return await TypedCreate<RailProfile>(data);
+                    return await CreateGeneric<RailProfile>(data);
 
                 case _steelgradeKey:
-                    return await TypedCreate<SteelGrade>(data);
+                    return await CreateGeneric<SteelGrade>(data);
 
                 case _workshopsegmentKey:
-                    return await TypedCreate<WorkshopSegment>(data);
+                    return await CreateGeneric<WorkshopSegment>(data);
 
                 default:
                     return HandbookNotFound(handbook);
             }
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = ClientRoles.Admin)]
         [HttpPut("{handbook}")]
         public async Task<IActionResult> Update(string handbook, [FromBody] JsonElement data)
         {
@@ -123,23 +123,23 @@ namespace RailWorkshop.API.Controllers
             switch (handbook)
             {
                 case _defectKey:
-                    return await TypedUpdate<Defect>(data);
+                    return await UpdateGeneric<Defect>(data);
 
                 case _railprofileKey:
-                    return await TypedUpdate<RailProfile>(data);
+                    return await UpdateGeneric<RailProfile>(data);
 
                 case _steelgradeKey:
-                    return await TypedUpdate<SteelGrade>(data);
+                    return await UpdateGeneric<SteelGrade>(data);
 
                 case _workshopsegmentKey:
-                    return await TypedUpdate<WorkshopSegment>(data);
+                    return await UpdateGeneric<WorkshopSegment>(data);
 
                 default:
                     return HandbookNotFound(handbook);
             }
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = ClientRoles.Admin)]
         [HttpDelete("{handbook}")]
         public async Task<IActionResult> Delete(string handbook, [FromBody] JsonElement data)
         {
@@ -151,16 +151,16 @@ namespace RailWorkshop.API.Controllers
             switch (handbook)
             {
                 case _defectKey:
-                    return await TypedDelete<Defect>(data);
+                    return await DeleteGeneric<Defect>(data);
 
                 case _railprofileKey:
-                    return await TypedDelete<RailProfile>(data);
+                    return await DeleteGeneric<RailProfile>(data);
 
                 case _steelgradeKey:
-                    return await TypedDelete<SteelGrade>(data);
+                    return await DeleteGeneric<SteelGrade>(data);
 
                 case _workshopsegmentKey:
-                    return await TypedDelete<WorkshopSegment>(data);
+                    return await DeleteGeneric<WorkshopSegment>(data);
 
                 default:
                     return HandbookNotFound(handbook);
@@ -168,7 +168,7 @@ namespace RailWorkshop.API.Controllers
         }
 
         [NonAction]
-        public async Task<IActionResult> TypedGetById<TEntity>(int id) where TEntity : class, IHandbookEntity
+        public async Task<IActionResult> GetByIdGeneric<TEntity>(int id) where TEntity : class, IHandbookEntity
         {
             TEntity result = await _repos.GetById<TEntity>(id);
 
@@ -181,13 +181,13 @@ namespace RailWorkshop.API.Controllers
         }
 
         [NonAction]
-        public async Task<IActionResult> TypedGetAll<TEntity>() where TEntity : class, IHandbookEntity
+        public async Task<IActionResult> GetAllGeneric<TEntity>() where TEntity : class, IHandbookEntity
         {
             return Ok(await _repos.GetAll<TEntity>());
         }
 
         [NonAction]
-        public async Task<IActionResult> TypedCreate<TEntity>(JsonElement data) where TEntity : class, IHandbookEntity
+        public async Task<IActionResult> CreateGeneric<TEntity>(JsonElement data) where TEntity : class, IHandbookEntity
         {
             TEntity entity = data.FromJson<TEntity>();
 
@@ -210,7 +210,7 @@ namespace RailWorkshop.API.Controllers
         }
 
         [NonAction]
-        public async Task<IActionResult> TypedUpdate<TEntity>(JsonElement data) where TEntity : class, IHandbookEntity
+        public async Task<IActionResult> UpdateGeneric<TEntity>(JsonElement data) where TEntity : class, IHandbookEntity
         {
             TEntity entity = data.FromJson<TEntity>();
 
@@ -233,7 +233,7 @@ namespace RailWorkshop.API.Controllers
         }
 
         [NonAction]
-        public async Task<IActionResult> TypedDelete<TEntity>(JsonElement data) where TEntity : class, IHandbookEntity
+        public async Task<IActionResult> DeleteGeneric<TEntity>(JsonElement data) where TEntity : class, IHandbookEntity
         {
             TEntity entity = data.FromJson<TEntity>();
 
@@ -253,6 +253,32 @@ namespace RailWorkshop.API.Controllers
 
                 return InvalidData();
             }
+        }
+
+        [NonAction]
+        public IActionResult HandbookNotFound(string handbook)
+        {
+            return NotFound($"Handbook with name \"{handbook}\" not found");
+        }
+
+        [NonAction]
+        public IActionResult EntityNotFound()
+        {
+            return NotFound("Entity with that identification data not found");
+        }
+
+        [NonAction]
+        public IActionResult InvalidData()
+        {
+            ModelState.AddModelError("error", "Mistake in data. May be some field skiped or has wrong data format or some id not exists.");
+            return BadRequest(ModelState);
+        }
+
+        [NonAction]
+        public IActionResult IdConflict()
+        {
+            ModelState.AddModelError("error", "Entity with that id already exists");
+            return BadRequest(ModelState);
         }
     }
 }

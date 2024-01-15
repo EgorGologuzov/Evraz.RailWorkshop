@@ -40,16 +40,45 @@ namespace RailWorkshop.Db.Data
 
             if (list.Count == 0)
             {
-                throw new EntityNotFoundException();
+                throw new IncorrectLoginOrPasswordException();
             }
 
             Employee employee = list.FirstOrDefault();
-            employee.Password = newPassword;
+            employee.Password = newPassword.ToSha256Hash();
             await Context.SaveChangesAsync();
 
             Logger.LogInformation("Password updated for employee {employee}", employee.Id);
 
             return employee;
+        }
+
+        public async Task<Employee> ResetPassword(Guid id, string newPassword)
+        {
+            Employee employee = await Context.Employees.FindAsync(id);
+
+            if (employee is null)
+            {
+                throw new EntityNotFoundException();
+            }
+
+            employee.Password = newPassword.ToSha256Hash();
+            await Context.SaveChangesAsync();
+
+            Logger.LogInformation("Password reset for employee {employee}", employee.Id);
+
+            return employee;
+        }
+
+        public override Task<Employee> Create(Employee employee)
+        {
+            employee.Password = employee.Password.ToSha256Hash();
+
+            return base.Create(employee);
+        }
+
+        public override Task<Employee> GetById(object id)
+        {
+            return Context.Employees.Include(e => e.Segment).Where(e => e.Id == (Guid)id).FirstOrDefaultAsync();
         }
     }
 }

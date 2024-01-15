@@ -1,10 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RailWorkshop.Db;
 using RailWorkshop.Db.Utils;
+using RailWorkshop.Services.Entity;
 
 namespace RailWorkshop.Services.Contracts
 {
@@ -30,35 +32,42 @@ namespace RailWorkshop.Services.Contracts
             return result;
         }
 
-        public virtual async Task<TEntity> Update(TEntity entity)
+        public virtual async Task<TEntity> Update(object id, TEntity entity)
         {
             DbSet<TEntity> dbSet = Context.Set<TEntity>();
-            EntityEntry<TEntity> entryResult = dbSet.Update(entity);
-            string originalValues = OriginalValuesToJson(entryResult.OriginalValues);
-            TEntity result = entryResult.Entity;
+            TEntity oldEntity = await dbSet.FindAsync(id);
+
+            if (oldEntity is null)
+            {
+                throw new EntityNotFoundException();
+            }
+
+            Context.Entry(oldEntity).CurrentValues.SetValues(entity);
+            EntityEntry<TEntity> entry = dbSet.Update(oldEntity);
+            TEntity result = entry.Entity;
+            var original = (TEntity)entry.OriginalValues.ToObject();
+
             await Context.SaveChangesAsync();
 
-            Logger.LogInformation(
-                "Updated {type} from {oldData} to {newData}",
-                typeof(TEntity).Name,
-                originalValues,
-                result.ToJson()
-            );
+            Logger.LogInformation("Updated {type} from {oldData} to {newData}", typeof(TEntity).Name, original.ToJson(), result.ToJson());
 
             return result;
         }
 
-        public virtual async Task<TEntity> Delete(TEntity entity)
+        public virtual async Task<TEntity> Delete(object id)
         {
             DbSet<TEntity> dbSet = Context.Set<TEntity>();
+            TEntity entity = await dbSet.FindAsync(id);
+
+            if (entity is null)
+            {
+                throw new EntityNotFoundException();
+            }
+
             TEntity result = dbSet.Remove(entity).Entity;
             await Context.SaveChangesAsync();
 
-            Logger.LogInformation(
-                "Deleted {type} with data {data}",
-                typeof(TEntity).Name,
-                result.ToJson()
-            );
+            Logger.LogInformation("Deleted {type} with data {data}", typeof(TEntity).Name, result.ToJson());
 
             return result;
         }
@@ -71,16 +80,10 @@ namespace RailWorkshop.Services.Contracts
             return result;
         }
 
-        private string OriginalValuesToJson(PropertyValues originalValues)
+        public virtual async Task<bool> IsExists(object id)
         {
-            JObject json = new();
-
-            foreach (var prop in originalValues.Properties)
-            {
-                json[prop.Name.ToLower()] = JToken.FromObject(originalValues[prop]);
-            }
-
-            return json.ToString(Formatting.Indented);
+            DbSet<TEntity> dbSet = Context.Set<TEntity>();
+            return await dbSet.FindAsync(id) is not null;
         }
     }
 }

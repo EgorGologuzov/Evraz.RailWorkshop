@@ -11,5 +11,6 @@ namespace RailWorkshop.Services.Contracts
     {
         Task<Employee> GetByLoginAndPassword(string name, string password);
         Task<Employee> UpdatePassword(Guid id, string oldPassword, string newPassword);
+        Task<Employee> ResetPassword(Guid id, string newPassword);
     }
 }

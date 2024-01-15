@@ -16,11 +16,12 @@ namespace RailWorkshop.Db.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            ClearTables();
         }
 
         private static void ClearTables()
         {
-            PostgresContext context = new();
+            PostgresContext context = new("host=localhost;port=5432;database=Evraz_RailWorkshop;username=Evraz;password=12345678");
 
             context.Database.ExecuteSqlRaw($"DELETE FROM \"{nameof(context.Defects)}\"");
             context.Database.ExecuteSqlRaw($"DELETE FROM \"{nameof(context.RailProfiles)}\"");
@@ -35,7 +36,7 @@ namespace RailWorkshop.Db.Migrations
 
         private static void FillTables()
         {
-            PostgresContext context = new();
+            PostgresContext context = new("host=localhost;port=5432;database=Evraz_RailWorkshop;username=Evraz;password=12345678");
 
             Defect defect1 = new() { Name = "Трещина" };
             context.Defects.Add(defect1);
