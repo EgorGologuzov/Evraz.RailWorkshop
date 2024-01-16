@@ -13,7 +13,7 @@ using RailWorkshop.Db;
 namespace RailWorkshop.Db.Migrations
 {
     [DbContext(typeof(PostgresContext))]
-    [Migration("20240114083334_Init")]
+    [Migration("20240116194045_Init")]
     partial class Init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,53 @@ namespace RailWorkshop.Db.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("RailWorkshop.Services.Entity.Consignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("Stamp")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("StatementId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("StatementId", "ProductId")
+                        .IsUnique();
+
+                    b.ToTable("Consignments");
+                });
+
+            modelBuilder.Entity("RailWorkshop.Services.Entity.ConsignmentDefect", b =>
+                {
+                    b.Property<Guid>("ConsignmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("DefectId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Size")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("ConsignmentId", "DefectId");
+
+                    b.HasIndex("DefectId");
+
+                    b.ToTable("ConsignmentDefects");
+                });
 
             modelBuilder.Entity("RailWorkshop.Services.Entity.Defect", b =>
                 {
@@ -95,35 +142,6 @@ namespace RailWorkshop.Db.Migrations
                     b.ToTable("Products");
                 });
 
-            modelBuilder.Entity("RailWorkshop.Services.Entity.ProductDefect", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("DefectId")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uuid");
-
-                    b.Property<decimal>("Quantity")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("Size")
-                        .HasColumnType("numeric");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DefectId");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("ProductDefects");
-                });
-
             modelBuilder.Entity("RailWorkshop.Services.Entity.RailProfile", b =>
                 {
                     b.Property<int>("Id")
@@ -141,20 +159,6 @@ namespace RailWorkshop.Db.Migrations
                     b.ToTable("RailProfiles");
                 });
 
-            modelBuilder.Entity("RailWorkshop.Services.Entity.SegmentAccount", b =>
-                {
-                    b.Property<int>("SegmentId")
-                        .HasColumnType("integer");
-
-                    b.Property<Dictionary<Guid, decimal>>("Products")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
-                    b.HasKey("SegmentId");
-
-                    b.ToTable("SegmentAccounts");
-                });
-
             modelBuilder.Entity("RailWorkshop.Services.Entity.Statement", b =>
                 {
                     b.Property<Guid>("Id")
@@ -163,10 +167,6 @@ namespace RailWorkshop.Db.Migrations
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("timestamp without time zone");
-
-                    b.Property<Dictionary<Guid, decimal>>("Products")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
 
                     b.Property<Guid>("ResponsibleId")
                         .HasColumnType("uuid");
@@ -220,6 +220,40 @@ namespace RailWorkshop.Db.Migrations
                     b.ToTable("WorkshopSegments");
                 });
 
+            modelBuilder.Entity("RailWorkshop.Services.Entity.Consignment", b =>
+                {
+                    b.HasOne("RailWorkshop.Services.Entity.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RailWorkshop.Services.Entity.Statement", null)
+                        .WithMany("Products")
+                        .HasForeignKey("StatementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("RailWorkshop.Services.Entity.ConsignmentDefect", b =>
+                {
+                    b.HasOne("RailWorkshop.Services.Entity.Consignment", null)
+                        .WithMany("Defects")
+                        .HasForeignKey("ConsignmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RailWorkshop.Services.Entity.Defect", "Defect")
+                        .WithMany()
+                        .HasForeignKey("DefectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Defect");
+                });
+
             modelBuilder.Entity("RailWorkshop.Services.Entity.Employee", b =>
                 {
                     b.HasOne("RailWorkshop.Services.Entity.WorkshopSegment", "Segment")
@@ -250,36 +284,6 @@ namespace RailWorkshop.Db.Migrations
                     b.Navigation("Steel");
                 });
 
-            modelBuilder.Entity("RailWorkshop.Services.Entity.ProductDefect", b =>
-                {
-                    b.HasOne("RailWorkshop.Services.Entity.Defect", "Defect")
-                        .WithMany()
-                        .HasForeignKey("DefectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RailWorkshop.Services.Entity.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Defect");
-
-                    b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("RailWorkshop.Services.Entity.SegmentAccount", b =>
-                {
-                    b.HasOne("RailWorkshop.Services.Entity.WorkshopSegment", "Segment")
-                        .WithOne()
-                        .HasForeignKey("RailWorkshop.Services.Entity.SegmentAccount", "SegmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Segment");
-                });
-
             modelBuilder.Entity("RailWorkshop.Services.Entity.Statement", b =>
                 {
                     b.HasOne("RailWorkshop.Services.Entity.Employee", "Responsible")
@@ -297,6 +301,16 @@ namespace RailWorkshop.Db.Migrations
                     b.Navigation("Responsible");
 
                     b.Navigation("Segment");
+                });
+
+            modelBuilder.Entity("RailWorkshop.Services.Entity.Consignment", b =>
+                {
+                    b.Navigation("Defects");
+                });
+
+            modelBuilder.Entity("RailWorkshop.Services.Entity.Statement", b =>
+                {
+                    b.Navigation("Products");
                 });
 #pragma warning restore 612, 618
         }

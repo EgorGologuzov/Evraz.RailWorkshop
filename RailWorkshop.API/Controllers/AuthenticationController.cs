@@ -37,7 +37,7 @@ namespace RailWorkshop.API.Controllers
             {
                 List<Claim> claims = new()
                 {
-                    new(ClaimTypes.Role, "Admin")
+                    new(ClaimTypes.Role, ClientRoles.Admin)
                 };
 
                 return Ok(GenerateToken(claims));
@@ -49,8 +49,8 @@ namespace RailWorkshop.API.Controllers
 
                 List<Claim> claims = new()
                 {
-                    new(ClaimTypes.Role, "Employee"),
-                    new("id", employee.Id.ToString())
+                    new(ClaimTypes.Role, ClientRoles.Employee),
+                    new(ClaimTypes.PrimarySid, employee.Id.ToString())
                 };
 
                 return Ok(GenerateToken(claims));

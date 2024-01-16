@@ -8,6 +8,8 @@ namespace RailWorkshop.Db.Migrations
 {
     public partial class Fill : Migration
     {
+        private const string _fillDbConnectionString = "host=localhost;port=5432;database=Evraz_RailWorkshop;username=Evraz;password=12345678";
+
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             ClearTables();
@@ -21,22 +23,22 @@ namespace RailWorkshop.Db.Migrations
 
         private static void ClearTables()
         {
-            PostgresContext context = new("host=localhost;port=5432;database=Evraz_RailWorkshop;username=Evraz;password=12345678");
+            PostgresContext context = new(_fillDbConnectionString);
 
             context.Database.ExecuteSqlRaw($"DELETE FROM \"{nameof(context.Defects)}\"");
             context.Database.ExecuteSqlRaw($"DELETE FROM \"{nameof(context.RailProfiles)}\"");
             context.Database.ExecuteSqlRaw($"DELETE FROM \"{nameof(context.SteelGrades)}\"");
             context.Database.ExecuteSqlRaw($"DELETE FROM \"{nameof(context.Products)}\"");
-            context.Database.ExecuteSqlRaw($"DELETE FROM \"{nameof(context.ProductDefects)}\"");
+            context.Database.ExecuteSqlRaw($"DELETE FROM \"{nameof(context.ConsignmentDefects)}\"");
             context.Database.ExecuteSqlRaw($"DELETE FROM \"{nameof(context.WorkshopSegments)}\"");
             context.Database.ExecuteSqlRaw($"DELETE FROM \"{nameof(context.Statements)}\"");
             context.Database.ExecuteSqlRaw($"DELETE FROM \"{nameof(context.Employees)}\"");
-            context.Database.ExecuteSqlRaw($"DELETE FROM \"{nameof(context.SegmentAccounts)}\"");
+            context.Database.ExecuteSqlRaw($"DELETE FROM \"{nameof(context.Consignments)}\"");
         }
 
         private static void FillTables()
         {
-            PostgresContext context = new("host=localhost;port=5432;database=Evraz_RailWorkshop;username=Evraz;password=12345678");
+            PostgresContext context = new(_fillDbConnectionString);
 
             Defect defect1 = new() { Name = "Трещина" };
             context.Defects.Add(defect1);
@@ -88,39 +90,6 @@ namespace RailWorkshop.Db.Migrations
 
             WorkshopSegment segment11 = new() { Name = "Погрузка продукции - Склад" };
             context.WorkshopSegments.Add(segment11);
-
-            SegmentAccount segmentAccount1 = new() { Segment = segment1, Products = new Dictionary<Guid, decimal>() };
-            context.SegmentAccounts.Add(segmentAccount1);
-
-            SegmentAccount segmentAccount2 = new() { Segment = segment2, Products = new Dictionary<Guid, decimal>() };
-            context.SegmentAccounts.Add(segmentAccount2);
-
-            SegmentAccount segmentAccount3 = new() { Segment = segment3, Products = new Dictionary<Guid, decimal>() };
-            context.SegmentAccounts.Add(segmentAccount3);
-
-            SegmentAccount segmentAccount4 = new() { Segment = segment4, Products = new Dictionary<Guid, decimal>() };
-            context.SegmentAccounts.Add(segmentAccount4);
-
-            SegmentAccount segmentAccount5 = new() { Segment = segment5, Products = new Dictionary<Guid, decimal>() };
-            context.SegmentAccounts.Add(segmentAccount5);
-
-            SegmentAccount segmentAccount6 = new() { Segment = segment6, Products = new Dictionary<Guid, decimal>() };
-            context.SegmentAccounts.Add(segmentAccount6);
-
-            SegmentAccount segmentAccount7 = new() { Segment = segment7, Products = new Dictionary<Guid, decimal>() };
-            context.SegmentAccounts.Add(segmentAccount7);
-
-            SegmentAccount segmentAccount8 = new() { Segment = segment8, Products = new Dictionary<Guid, decimal>() };
-            context.SegmentAccounts.Add(segmentAccount8);
-
-            SegmentAccount segmentAccount9 = new() { Segment = segment9, Products = new Dictionary<Guid, decimal>() };
-            context.SegmentAccounts.Add(segmentAccount9);
-
-            SegmentAccount segmentAccount10 = new() { Segment = segment10, Products = new Dictionary<Guid, decimal>() };
-            context.SegmentAccounts.Add(segmentAccount10);
-
-            SegmentAccount segmentAccount11 = new() { Segment = segment11, Products = new Dictionary<Guid, decimal>() };
-            context.SegmentAccounts.Add(segmentAccount11);
 
             Employee employee1 = new() { Name = "Антонов Антон Антонович", Password = "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3", Segment = segment1 };
             context.Employees.Add(employee1);
@@ -197,74 +166,82 @@ namespace RailWorkshop.Db.Migrations
             };
             context.Products.Add(product3);
 
-            ProductDefect productDefect1 = new()
-            {
-                Product = product1,
-                Defect = defect1,
-                Quantity = 1m,
-                Size = 1.5m
-            };
-            context.ProductDefects.Add(productDefect1);
-
-            ProductDefect productDefect2 = new()
-            {
-                Product = product2,
-                Defect = defect2,
-                Quantity = 2m,
-                Size = 3m
-            };
-            context.ProductDefects.Add(productDefect2);
-
-            ProductDefect productDefect3 = new()
-            {
-                Product = product3,
-                Defect = defect1,
-                Quantity = 1.8904m,
-                Size = 9.9034m
-            };
-            context.ProductDefects.Add(productDefect3);
-
-            context.SaveChanges();
-
-            List<Product> products = context.Products.ToList();
-            product1 = products[0];
-            product2 = products[1];
-            product3 = products[2];
-
             Statement statement1 = new()
             {
-                Type = StatementType.Debit,
+                Type = StatementType.Credit,
                 Date = DateTime.Now,
-                Products = new Dictionary<Guid, decimal> { { product1.Id, 500.9m }, { product2.Id, 367.89m } },
                 Responsible = employee1,
-                Segment = segment1
+                Segment = segment1,
+                Products = new List<Consignment>
+                {
+                    new() { Stamp = product1.Name, Product = product1, Quantity = 100 },
+                    new() { Stamp = product2.Name, Product = product2, Quantity = 50 },
+                }
             };
+
             context.Statements.Add(statement1);
 
             Statement statement2 = new()
             {
-                Type = StatementType.Credit,
+                Type = StatementType.Debit,
                 Date = DateTime.Now,
-                Products = new Dictionary<Guid, decimal> { { product2.Id, 1100m }, { product3.Id, 367.89m } },
                 Responsible = employee2,
-                Segment = segment2
+                Segment = segment2,
+                Products = new List<Consignment>
+                {
+                    new()
+                    {
+                        Stamp = product3.Name,
+                        Product = product1,
+                        Quantity = 1,
+                        Defects = new List<ConsignmentDefect>
+                        {
+                            new() { Defect = defect1, Size = 1.30m }
+                        }
+                    }
+                }
             };
+
             context.Statements.Add(statement2);
 
             Statement statement3 = new()
             {
                 Type = StatementType.Debit,
                 Date = DateTime.Now,
-                Products = new Dictionary<Guid, decimal>
+                Responsible = employee1,
+                Segment = segment1,
+                Products = new List<Consignment>
                 {
-                    { product1.Id, 100.9m },
-                    { product2.Id, 907.89m },
-                    { product3.Id, 478.984543m}
-                },
-                Responsible = employee3,
-                Segment = segment3
+                    new() { Stamp = product1.Name, Product = product2, Quantity = 500 },
+                    new() { Stamp = product2.Name, Product = product3, Quantity = 300 },
+                }
             };
+
             context.Statements.Add(statement3);
+
+            Statement statement4 = new()
+            {
+                Type = StatementType.Debit,
+                Date = DateTime.Now,
+                Responsible = employee2,
+                Segment = segment2,
+                Products = new List<Consignment>
+                {
+                    new()
+                    {
+                        Stamp = product3.Name,
+                        Product = product1,
+                        Quantity = 1,
+                        Defects = new List<ConsignmentDefect>
+                        {
+                            new() { Defect = defect1, Size = 1.30m },
+                            new() { Defect = defect2, Size = 3.30m },
+                        }
+                    }
+                }
+            };
+
+            context.Statements.Add(statement4);
 
             context.SaveChanges();
         }

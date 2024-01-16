@@ -45,6 +45,7 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<IHandbookRepository, HandbookRepository>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IStatementRepository, StatementRepository>();
 
 // Подключение базы данных
 builder.Services.AddDbContext<PostgresContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaulConnection")));

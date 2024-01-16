@@ -5,7 +5,7 @@ namespace RailWorkshop.Db
 {
     public class PostgresContext : DbContext
     {
-        private string _connectionString;
+        private readonly string _connectionString;
 
         public DbSet<Defect> Defects { get; set; }
         public DbSet<RailProfile> RailProfiles { get; set; }
@@ -14,8 +14,8 @@ namespace RailWorkshop.Db
         public DbSet<Employee> Employees { get; set; }
         public DbSet<WorkshopSegment> WorkshopSegments { get; set; }
         public DbSet<Statement> Statements { get; set; }
-        public DbSet<ProductDefect> ProductDefects { get; set; }
-        public DbSet<SegmentAccount> SegmentAccounts { get; set; }
+        public DbSet<ConsignmentDefect> ConsignmentDefects { get; set; }
+        public DbSet<Consignment> Consignments { get; set; }
 
         public PostgresContext(string connectionString)
         {
@@ -39,10 +39,11 @@ namespace RailWorkshop.Db
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<SegmentAccount>()
-                .HasOne(a => a.Segment)
-                .WithOne()
-                .HasForeignKey<SegmentAccount>(a => a.SegmentId);
+            modelBuilder.Entity<ConsignmentDefect>()
+                .HasKey(d => new { d.ConsignmentId, d.DefectId });
+
+            modelBuilder.Entity<Consignment>()
+                .HasIndex(c => new { c.StatementId, c.ProductId }).IsUnique();
 
             base.OnModelCreating(modelBuilder);
         }

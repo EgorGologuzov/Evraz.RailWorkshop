@@ -20,6 +20,18 @@ namespace RailWorkshop.API.Utils
                 .ReverseMap();
             CreateMap<ProductUpdateDto, Product>()
                 .ReverseMap();
+            CreateMap<StatementReturnDto, Statement>()
+                .ReverseMap();
+            CreateMap<ConsignmentReturnDto, Consignment>()
+                .ReverseMap();
+            CreateMap<ConsignmentDefectReturnDto, ConsignmentDefect>()
+                .ReverseMap();
+            CreateMap<StatementCreateDto, Statement>()
+                .ReverseMap();
+            CreateMap<ConsignmentCreateDto, Consignment>()
+                .ReverseMap();
+            CreateMap<ConsignmentDefectCreateDto, ConsignmentDefect>()
+                .ReverseMap();
         }
     }
 }

@@ -2,21 +2,22 @@
 
 namespace RailWorkshop.Services.Entity
 {
-    public class ProductDefect
+    public class Consignment
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
+
+        [Required]
+        public Guid StatementId { get; set; }
 
         [Required]
         public Guid ProductId { get; set; }
 
         public Product Product { get; set; }
 
-        [Required]
-        public int DefectId { get; set; }
-
-        public Defect Defect { get; set; }
+        public string Stamp { get; set; }
 
         public decimal Quantity { get; set; }
-        public decimal Size { get; set; }
+
+        public ICollection<ConsignmentDefect> Defects { get; set; }
     }
 }

@@ -14,8 +14,6 @@ namespace RailWorkshop.API.Controllers
     public class EmployeeController : GeneralController<Employee>
     {
         private readonly IEmployeeRepository _repos;
-        private readonly ILogger _logger;
-        private readonly IMapper _mapper;
 
         public EmployeeController(
             IEmployeeRepository repos,
@@ -23,8 +21,6 @@ namespace RailWorkshop.API.Controllers
             IMapper mapper) : base(repos, logger, mapper)
         {
             _repos = repos;
-            _logger = logger;
-            _mapper = mapper;
         }
 
         [Authorize]
@@ -39,7 +35,7 @@ namespace RailWorkshop.API.Controllers
             try
             {
                 Employee result = await _repos.UpdatePassword(data.EmployeeId, data.OldPassword, data.NewPassword);
-                EmployeeReturnDto dto = _mapper.Map<EmployeeReturnDto>(await _repos.GetById(result.Id));
+                EmployeeReturnDto dto = Mapper.Map<EmployeeReturnDto>(await _repos.GetById(result.Id));
 
                 return Ok(dto);
             }
@@ -49,7 +45,7 @@ namespace RailWorkshop.API.Controllers
             }
             catch (Microsoft.EntityFrameworkCore.DbUpdateException)
             {
-                _logger.LogError("Failed password update {data}", data.ToJson());
+                Logger.LogError("Failed password update {data}", data.ToJson());
                 return InvalidData();
             }
         }
@@ -66,7 +62,7 @@ namespace RailWorkshop.API.Controllers
             try
             {
                 Employee result = await _repos.ResetPassword(data.EmployeeId, data.NewPassword);
-                EmployeeReturnDto dto = _mapper.Map<EmployeeReturnDto>(await _repos.GetById(result.Id));
+                EmployeeReturnDto dto = Mapper.Map<EmployeeReturnDto>(await _repos.GetById(result.Id));
 
                 return Ok(dto);
             }
@@ -76,7 +72,7 @@ namespace RailWorkshop.API.Controllers
             }
             catch (Microsoft.EntityFrameworkCore.DbUpdateException)
             {
-                _logger.LogError("Failed password reset {data}", data.ToJson());
+                Logger.LogError("Failed password reset {data}", data.ToJson());
                 return InvalidData();
             }
         }

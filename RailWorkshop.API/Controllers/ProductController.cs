@@ -27,7 +27,7 @@ namespace RailWorkshop.API.Controllers
 
             if (result is OkObjectResult r)
             {
-                Product value = (Product)r.Value;
+                var value = (Product)r.Value;
                 r.Value = Mapper.Map<ProductReturnDto>(value);
             }
 
@@ -42,7 +42,7 @@ namespace RailWorkshop.API.Controllers
 
             if (result is OkObjectResult r)
             {
-                Product value = (Product)r.Value;
+                var value = (Product)r.Value;
                 r.Value = await GetReturnDtoByEntityId<ProductReturnDto>(value.Id);
             }
 

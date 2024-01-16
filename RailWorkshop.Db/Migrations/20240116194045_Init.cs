@@ -111,59 +111,12 @@ namespace RailWorkshop.Db.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "SegmentAccounts",
-                columns: table => new
-                {
-                    SegmentId = table.Column<int>(type: "integer", nullable: false),
-                    Products = table.Column<Dictionary<Guid, decimal>>(type: "jsonb", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_SegmentAccounts", x => x.SegmentId);
-                    table.ForeignKey(
-                        name: "FK_SegmentAccounts_WorkshopSegments_SegmentId",
-                        column: x => x.SegmentId,
-                        principalTable: "WorkshopSegments",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ProductDefects",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    ProductId = table.Column<Guid>(type: "uuid", nullable: false),
-                    DefectId = table.Column<int>(type: "integer", nullable: false),
-                    Quantity = table.Column<decimal>(type: "numeric", nullable: false),
-                    Size = table.Column<decimal>(type: "numeric", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ProductDefects", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_ProductDefects_Defects_DefectId",
-                        column: x => x.DefectId,
-                        principalTable: "Defects",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ProductDefects_Products_ProductId",
-                        column: x => x.ProductId,
-                        principalTable: "Products",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Statements",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Type = table.Column<int>(type: "integer", nullable: false),
                     Date = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
-                    Products = table.Column<Dictionary<Guid, decimal>>(type: "jsonb", nullable: false),
                     ResponsibleId = table.Column<Guid>(type: "uuid", nullable: false),
                     SegmentId = table.Column<int>(type: "integer", nullable: false)
                 },
@@ -184,20 +137,78 @@ namespace RailWorkshop.Db.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Consignments",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    StatementId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProductId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Stamp = table.Column<string>(type: "text", nullable: false),
+                    Quantity = table.Column<decimal>(type: "numeric", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Consignments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Consignments_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Consignments_Statements_StatementId",
+                        column: x => x.StatementId,
+                        principalTable: "Statements",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ConsignmentDefects",
+                columns: table => new
+                {
+                    ConsignmentId = table.Column<Guid>(type: "uuid", nullable: false),
+                    DefectId = table.Column<int>(type: "integer", nullable: false),
+                    Size = table.Column<decimal>(type: "numeric", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ConsignmentDefects", x => new { x.ConsignmentId, x.DefectId });
+                    table.ForeignKey(
+                        name: "FK_ConsignmentDefects_Consignments_ConsignmentId",
+                        column: x => x.ConsignmentId,
+                        principalTable: "Consignments",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ConsignmentDefects_Defects_DefectId",
+                        column: x => x.DefectId,
+                        principalTable: "Defects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConsignmentDefects_DefectId",
+                table: "ConsignmentDefects",
+                column: "DefectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Consignments_ProductId",
+                table: "Consignments",
+                column: "ProductId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Consignments_StatementId_ProductId",
+                table: "Consignments",
+                columns: new[] { "StatementId", "ProductId" },
+                unique: true);
+
             migrationBuilder.CreateIndex(
                 name: "IX_Employees_SegmentId",
                 table: "Employees",
                 column: "SegmentId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ProductDefects_DefectId",
-                table: "ProductDefects",
-                column: "DefectId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ProductDefects_ProductId",
-                table: "ProductDefects",
-                column: "ProductId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Products_ProfileId",
@@ -223,13 +234,10 @@ namespace RailWorkshop.Db.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "ProductDefects");
+                name: "ConsignmentDefects");
 
             migrationBuilder.DropTable(
-                name: "SegmentAccounts");
-
-            migrationBuilder.DropTable(
-                name: "Statements");
+                name: "Consignments");
 
             migrationBuilder.DropTable(
                 name: "Defects");
@@ -238,13 +246,16 @@ namespace RailWorkshop.Db.Migrations
                 name: "Products");
 
             migrationBuilder.DropTable(
-                name: "Employees");
+                name: "Statements");
 
             migrationBuilder.DropTable(
                 name: "RailProfiles");
 
             migrationBuilder.DropTable(
                 name: "SteelGrades");
+
+            migrationBuilder.DropTable(
+                name: "Employees");
 
             migrationBuilder.DropTable(
                 name: "WorkshopSegments");
